@@ -1,0 +1,474 @@
+---
+title: "Tugas Kelompok Praktikum 1"
+author: "Kelompok 11"
+format: 
+  html:
+    toc: true
+    toc-location: right
+    toc-title: "Daftar Isi"
+    toc-depth: 3
+    number-sections: false
+    theme:
+      dark: darkly
+      light: flatly
+    css: custom.css
+    highlight-style: github
+    code-fold: false
+    code-tools: false
+    smooth-scroll: true
+    fig-align: center
+    linkcolor: "#5c5c5c"
+    fig-cap-location: bottom
+    df-print: paged
+    embed-resources: true  
+    toc-expand: true
+    code-copy: true
+    code-overflow: wrap
+    code-block-border-left: "#5c5c5c"
+---
+
+# Tim Kelompok
+
+Penyusun
+
+:   |                           |             |
+    |---------------------------|-------------|
+    | Wira Adiguna Sutawa       | M0501261029 |
+    | Hairatun Hisanun          | M0501261016 |
+    | Azadillah Aulia Ramadhani | M0501261064 |
+
+## SOAL 1
+
+Pembersihan Data Mahasiswa
+
+Diberikan dataset mentah pada Tabel 1 berikut.
+
+Tabel 1. Dataset Nilai Mahasiswa
+
+| Nama  | Matematika | Statistika | Umur |
+|-------|------------|------------|------|
+| Andi  | 80         | 85         | 21   |
+| Budi  | 90         | 88         | 20   |
+| Citra | NA         | 78         | 22   |
+| Dewi  | 75         | \-         | 21   |
+| Andi  | 80         | 85         | 21   |
+
+## 1. Data frame
+
+Buat data frame bernama `nilai_raw` secara manual di R berdasarkan Tabel 1.
+
+```{r}
+nilai_raw <- data.frame(
+  Nama = c("Andi", "Budi", "Citra", "Dewi", "Andi"),
+  Matematika = c(80, 90, NA, 75, 80),
+  Statistika = c(85, 88, 78, "-", 85),
+  Umur = c(21, 20, 22, 21, 21)
+)
+
+nilai_raw
+```
+
+## 2. Identifikasi
+
+Identifikasi nilai yang hilang pada dataset secara sistematis. Ubah tanda hubung (`"-"`) pada nilai Statistika milik Dewi menjadi nilai hilang standar R, yaitu `NA`.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+is.na(nilai_raw)
+```
+
+```{r}
+sum(is.na(nilai_raw))
+```
+
+```{r}
+nilai_raw$Statistika[nilai_raw$Statistika == "-"] <- NA 
+nilai_raw$Statistika <- as.numeric(nilai_raw$Statistika)
+```
+
+## 3. Imputasi Rata-rata
+
+Lakukan imputasi terhadap nilai `Statistika` yang kosong menggunakan rata-rata nilai Statistika mahasiswa lainnya yang tersedia.
+
+::: callout-caution
+Penyelesaian
+
+\Mengingat biar data menjadi bersih kami imputasi juga nilai matematika.
+:::
+
+```{r}
+nilai_raw$Statistika[is.na(nilai_raw$Statistika)] <- mean(nilai_raw$Statistika, na.rm = TRUE)
+nilai_raw$Matematika[is.na(nilai_raw$Matematika)] <- mean(nilai_raw$Matematika, na.rm = TRUE)
+
+nilai_raw
+```
+
+## 4. Buat kolom baru bernama `Status_Umur`
+
+Buat kolom baru bernama `Status_Umur` menggunakan fungsi `ifelse()` dengan ketentuan:\
+`Dewasa` jika umur ≥ 21 tahun;\
+`Muda` jika umur \< 21 tahun.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+nilai_raw$Status_Umur <- 
+  ifelse(nilai_raw$Umur >= 21, "Dewasa", "Muda")
+
+nilai_raw
+```
+
+## 5. Identifikasi dan hapus baris pengamatan yang duplikat.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+duplicated(nilai_raw)
+nilai_raw <-  unique(nilai_raw)
+nilai_raw
+```
+
+## 6. Simpan Dataset
+
+Simpan dataset yang telah dibersihkan ke dalam file bernama **`nilai_bersih.csv`**.
+
+```{r}
+write.csv(nilai_raw,"nilai_bersih.csv") 
+```
+
+# SOAL 2
+
+Subsetting dan Pengurutan Multikriteria
+
+Gunakan dataset `profil` pada Tabel 2 berikut.
+
+Tabel 2. Dataset Profil
+
+| No  | gender | v1  | v2  | v3  | v4  | v5  | v6  | v7  | v8  | v9  | v10 |
+|-----|--------|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| 1   | f      | 8   | 9   | 5   | 9   | 9   | 9   | 5   | 9   | 11  | 8   |
+| 2   | f      | 15  | 8   | 9   | 5   | 10  | 8   | 10  | 12  | 9   | 15  |
+| 3   | f      | 8   | 13  | 12  | 6   | 7   | 9   | 14  | 12  | 12  | 9   |
+| 4   | m      | 14  | 9   | 8   | NA  | 11  | 10  | 6   | 11  | 11  | 8   |
+| 5   | m      | 8   | 2   | 9   | 16  | 8   | 10  | 8   | 9   | 8   | 9   |
+| 6   | f      | 10  | 6   | 10  | 9   | 10  | 10  | 9   | 7   | 7   | 11  |
+| 7   | m      | 9   | 9   | 7   | 13  | 9   | 12  | 10  | 9   | 11  | 7   |
+| 8   | m      | 9   | 10  | 8   | 10  | 5   | 10  | 6   | 12  | 6   | 8   |
+| 9   | f      | 10  | 13  | 6   | 7   | 10  | 12  | 13  | 9   | 6   | 9   |
+| 10  | m      | 12  | 10  | 9   | 8   | 17  | 7   | 9   | 10  | 7   | 7   |
+
+Lakukan tahapan berikut.
+
+## 1. Pembersihan data Mahasiswa
+
+Buat data frame bernama `profil` secara manual di R berdasarkan Tabel 2.
+
+```{r}
+profil <- data.frame(
+  No = 1:10,
+  gender = c("f", "f", "f", "m", "m", "f", "m", "m", "f", "m"),
+  v1  = c(8, 15, 8, 14, 8, 10, 9, 9, 10, 12),
+  v2  = c(9, 8, 13, 9, 2, 6, 9, 10, 13, 10),
+  v3  = c(5, 9, 12, 8, 9, 10, 7, 8, 6, 9),
+  v4  = c(9, 5, 6, NA, 16, 9, 13, 10, 7, 8),
+  v5  = c(9, 10, 7, 11, 8, 10, 9, 5, 10, 17),
+  v6  = c(9, 8, 9, 10, 10, 10, 12, 10, 12, 7),
+  v7  = c(5, 10, 14, 6, 8, 9, 10, 6, 13, 9),
+  v8  = c(9, 12, 12, 11, 9, 7, 9, 12, 9, 10),
+  v9  = c(11, 9, 12, 11, 8, 7, 11, 6, 6, 7),
+  v10 = c(8, 15, 9, 8, 9, 11, 7, 8, 9, 7)
+)
+
+profil
+```
+
+## 2. Penyaringan
+
+Lakukan penyaringan (subsetting) sehingga hanya menyisakan pengamatan yang memenuhi salah satu kondisi berikut:\
+gender laki-laki `(m)` dan `v1 > 9` ; atau\
+gender perempuan `(f)` dan `v3 <= 10`.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+databaru <- (profil$gender == "m" & profil$v1>9 | profil$gender == "f" & profil$v3<= 10)
+row.names(databaru) <- NULL
+databaru <- profil[databaru, ]
+databaru
+```
+
+## 3. Urutkan
+
+Urutkan data hasil penyaringan secara multikriteria, dengan ketentuan:\
+`gender` diurutkan secara *descending*;\
+untuk pengamatan dengan `gender` yang sama, `v5` diurutkan secara *ascending*.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+databaru$gender <- factor(databaru$gender, levels = c("m", "f"))
+row.names(databaru) <-  NULL
+
+data3<-databaru[order(databaru$gender, databaru$v5), ]
+data3
+```
+
+## 4. Simpan CSV
+
+Simpan hasil akhir ke dalam file bernama **`profil_filter.csv`**.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+write.csv(data3, "profil_filter.csv")
+```
+
+# SOAL 3
+
+Diberikan dua data frame mengenai skor penjualan mingguan beberapa toko berikut.
+
+```         
+df_sales <- data.frame(   id_toko = c("T1", "T2", "T3"),   Minggu1 = c(120, 150, 95),   Minggu2 = c(135, 140, 110) )  df_info <- data.frame(   id = c("T1", "T2", "T4"),   Kota = c("Jakarta", "Bandung", "Surabaya") )
+```
+
+Lakukan tahapan berikut.
+
+## 1. Gabungkan
+
+Gabungkan `df_sales` dan `df_info` menggunakan fungsi `merge()` dengan metode Full Outer Join, sehingga seluruh toko dari kedua data frame tetap disertakan.\
+Perhatikan bahwa nama variabel kunci pada kedua data frame berbeda, yaitu `id_toko` pada `df_sales` dan `id` pada `df_info`. Gunakan argumen penggabungan yang sesuai.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+df_sales <- data.frame(
+  id_toko = c("T1", "T2", "T3"),
+  Minggu1 = c(120, 150, 95),
+  Minggu2 = c(135, 140, 110)
+)
+
+df_info <- data.frame(
+  id = c("T1", "T2", "T4"),
+  Kota = c("Jakarta", "Bandung", "Surabaya")
+)
+
+df_gabung <- merge(df_sales, df_info, by.x = "id_toko", by.y = "id" , all = TRUE)
+
+
+df_gabung
+```
+
+## 2. Ubah struktur data hasil penggabungan dari format Wide menjadi Long, sehingga:
+
+`Minggu1` dan `Minggu2` digabung menjadi satu kolom bernama `Waktu`;
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+df_gabung_long  <- reshape(df_gabung, 
+                           v.names = "Penjualan",
+                           varying = c("Minggu1", "Minggu2"),
+                           timevar = "Waktu",
+                           times = c("Minggu1", "Minggu2"),
+                           idvar = "id_toko",
+                           direction = "long") 
+rownames(df_gabung_long) <- NULL
+
+df_gabung_long
+  
+```
+
+## 3. Simpan CSV
+
+Simpan dataset dalam format Long tersebut ke dalam file bernama **`penjualan_long.csv`**.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+write.csv(df_gabung_long, "penjualan_long.csv")
+```
+
+# SOAL 4
+
+Gunakan dataset bawaan R `CO2` untuk mengeksplorasi hubungan antara konsentrasi karbon dioksida (`conc`) dan tingkat penyerapan karbon dioksida (`uptake`) pada tanaman.
+
+## 1. Kenali Struktur dataset CO2
+
+Kenali struktur dataset `CO2` dan identifikasi peran peubah `Plant`, `Type`, `Treatment`, `conc`, dan `uptake`, kemudian buat grafik menggunakan **base R** untuk menunjukkan hubungan `conc` dan `uptake` dengan mengatur bentuk dan ukuran titik, warna, judul, label sumbu, serta rentang sumbu, lalu tambahkan minimal **dua elemen grafik** menggunakan `points()`, `lines()`, `abline()`, atau `text()`.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+library(tidyverse)
+
+data <- CO2
+
+glimpse(data)
+```
+
+```{r}
+plot(CO2$conc, CO2$uptake,
+     main = "Hubungan Konsentrasi conc dan uptake",
+     xlab = "Konsentrasi CO2",
+     ylab = "CO2 Uptake",
+     pch = 20,
+     cex = 1.3,
+     col = "darkblue",)
+
+mean_uptake <- aggregate(uptake ~ conc, data = CO2, mean)
+points(mean_uptake$conc,
+       mean_uptake$uptake,
+       pch = 23,
+       col = "pink",
+       cex = 1.3)
+
+lines(mean_uptake$conc,
+      mean_uptake$uptake,
+      lwd = 2,
+      col = "pink")
+```
+
+## 2. Grafik berukuran **2 × 2**
+
+Buat satu tampilan grafik berukuran **2 × 2** yang terdiri atas empat jenis visualisasi berbeda untuk mengeksplorasi `conc`, `uptake`, `Type`, dan `Treatment`; tentukan sendiri jenis grafik yang paling sesuai dan berikan judul yang jelas pada setiap grafik.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+par(mfrow = c(2,2))
+mar = c(4,4,3,3)
+plot(CO2$conc, CO2$uptake,
+     main = "hubungan Konsentrasi CO2 dan Uptake",
+     xlab = "Konsentrasi CO2",
+     ylab = "CO2 Uptake",
+     pch = 19,
+     col = "blue")
+
+boxplot(uptake ~ Type,
+        data = CO2,
+        main = "CO2 Uptake berdasarkan Type",
+        xlab = "type",
+        ylab = "CO2 Uptake",
+        col = c("lightblue", "lightgreen"))
+
+
+boxplot(uptake ~ Treatment,
+        data = CO2,
+        main = "CO2 uptake berdasarkan treatment",
+        xlab = "treatment",
+        ylab = "CO2 Uptake",
+        col = c("orange", "pink"))
+
+
+rata_uptake <- aggregate(uptake ~ conc,
+                         data = CO2,
+                         FUN = mean)
+
+barplot(rata_uptake$uptake,
+        names.arg = rata_uptake$conc,
+        main = "rata CO2 Uptake berdasarkan Konsentrasi",
+        xlab = "konsentrasi CO2",
+        ylab = "rata-rata CO2 Uptake",
+        col = "gray",
+        las = 2)
+```
+
+## 3. qqplot dan ggplot
+
+Gunakan `qplot()` untuk membuat visualisasi cepat hubungan `conc` dan `uptake` berdasarkan `Treatment`, kemudian buat kembali visualisasi tersebut menggunakan `ggplot2` dengan memetakan `Treatment` dan `Type` ke **atribut visual yang berbeda** di dalam `aes()` serta menggunakan `geom_*` yang sesuai.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+qplot(x = CO2$conc, 
+     y = CO2$uptake,
+     data = CO2,
+     col = Treatment,
+     shape = Treatment,
+     main = "hubungan conc dan uptake berdasarkan treatment")
+```
+
+```{r}
+ggplot(data,
+  aes(x = conc, 
+      y = uptake,
+      col = Type,
+      shape = Treatment)) +
+geom_point()
+```
+
+## 4. Kembangkan Grafik
+
+Kembangkan grafik `ggplot2` tersebut dengan menambahkan minimal satu `stat_*`, satu `scale_*`, serta salah satu `coord_*`, kemudian lengkapi grafik menggunakan `labs()` dan `theme()` atau salah satu tema siap pakai agar grafik lebih informatif dan mudah dibaca.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+ggplot(data,
+       aes(x = conc, 
+           y = uptake,
+           col = Type,
+           shape = Treatment)) +
+  geom_point(size = 2) +
+  stat_summary() +
+  scale_color_manual(
+    values = c("black", "darkgreen")
+  ) +
+  scale_x_continuous(name = "conc") +
+  coord_flip(xlim = c(0,500)) + 
+  labs(title = "hubungan conc dan Uptake",
+       subtitle = "berdasarkan type dan treatment",
+       x = "conc",
+       y = "Uptake",
+       color = "Type",
+       shape = "Treatment"
+  ) +
+  theme_classic() + 
+  theme(plot.title = element_text(face = "bold", size = 15),
+        plot.subtitle = element_text(color = "red"),
+        legend.position = "right"
+  )
+  
+```
+
+## 5. Save
+
+Simpan grafik akhir menggunakan `ggsave()` dalam format PNG dengan nama **`co2_uptake_visualisasi.png`**, kemudian tuliskan interpretasi mengenai hubungan antara konsentrasi CO₂ dan `uptake` serta perbedaan pola yang terlihat berdasarkan `Type` dan `Treatment`.
+
+::: callout-caution
+Penyelesaian
+:::
+
+```{r}
+ggsave("co2_uptake_visualisasi.png",
+       width = 7,
+       height = 5,
+       dpi = 300)
+```
